@@ -20,6 +20,7 @@
 #include <linux/string.h>
 #include <asm/uaccess.h>
 
+#ifdef CONFIG_NEW_LEDS
 #if LINUX_VERSION_IS_GEQ(3,19,0)
 int led_set_brightness_sync(struct led_classdev *led_cdev,
 			    enum led_brightness value)
@@ -39,6 +40,7 @@ int led_set_brightness_sync(struct led_classdev *led_cdev,
 }
 EXPORT_SYMBOL_GPL(led_set_brightness_sync);
 #endif /* >= 3.19 */
+#endif /* CONFIG_NEW_LEDS */
 
 #if LINUX_VERSION_IS_GEQ(3,2,0)
 /**
@@ -124,6 +126,7 @@ void phy_attached_print(struct phy_device *phydev, const char *fmt, ...)
 }
 EXPORT_SYMBOL_GPL(phy_attached_print);
 
+#ifdef CONFIG_LEDS_TRIGGERS
 static void devm_led_trigger_release(struct device *dev, void *res)
 {
 	led_trigger_unregister(*(struct led_trigger **)res);
@@ -151,3 +154,4 @@ int devm_led_trigger_register(struct device *dev,
 	return rc;
 }
 EXPORT_SYMBOL_GPL(devm_led_trigger_register);
+#endif /* CONFIG_LEDS_TRIGGERS */
