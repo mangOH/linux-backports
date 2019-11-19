@@ -73,4 +73,8 @@ static inline bool sock_allow_reclassification(const struct sock *csk)
 }
 #endif /* < 4.6 */
 
+#if LINUX_VERSION_IS_LESS(4,6,0)
+int __sock_queue_rcv_skb(struct sock *sk, struct sk_buff *skb);
+#endif /* < 4.6.0 */
+
 #endif /* __BACKPORT_NET_SOCK_H */
