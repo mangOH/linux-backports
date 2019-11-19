@@ -12,6 +12,7 @@
 #include <linux/uaccess.h>
 #include <linux/export.h>
 #include <net/sock.h>
+#include <trace/events/sock.h>
 
 /**
  * kstrtobool - convert common user inputs into boolean values
@@ -102,7 +103,7 @@ int __sock_queue_rcv_skb(struct sock *sk, struct sk_buff *skb)
 	skb_dst_force(skb);
 
 	spin_lock_irqsave(&list->lock, flags);
-	sock_skb_set_dropcount(sk, skb);
+	skb->dropcount = atomic_read(&sk->sk_drops);
 	__skb_queue_tail(list, skb);
 	spin_unlock_irqrestore(&list->lock, flags);
 
