@@ -1,0 +1,48 @@
+From 2e1354a6c1599f56b46b35fcbc0402a03a310c33 Mon Sep 17 00:00:00 2001
+From: David Frey <dfrey@sierrawireless.com>
+Date: Thu, 12 Dec 2019 14:12:52 -0800
+Subject: [PATCH] support sock.sk_refcnt with type atomic_t prior to 4.13
+
+use atomic_* rather than refcount_* functions on sock.sk_refcnt when
+linux < 4.13 because the type of the member was changed from atomic_t to
+refcount_t in 4.13.
+---
+ net/bluetooth/af_bluetooth.c | 4 ++++
+ net/bluetooth/rfcomm/sock.c  | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/net/bluetooth/af_bluetooth.c b/net/bluetooth/af_bluetooth.c
+index 583951e82cee..4045ddf550b3 100644
+--- a/net/bluetooth/af_bluetooth.c
++++ b/net/bluetooth/af_bluetooth.c
+@@ -657,7 +657,11 @@ static int bt_seq_show(struct seq_file *seq, void *v)
+ 		seq_printf(seq,
+ 			   "%pK %-6d %-6u %-6u %-6u %-6lu %-6lu",
+ 			   sk,
++#if LINUX_VERSION_IS_GEQ(4,13,0)
+ 			   refcount_read(&sk->sk_refcnt),
++#else
++			   atomic_read(&sk->sk_refcnt),
++#endif
+ 			   sk_rmem_alloc_get(sk),
+ 			   sk_wmem_alloc_get(sk),
+ 			   from_kuid(seq_user_ns(seq), sock_i_uid(sk)),
+diff --git a/net/bluetooth/rfcomm/sock.c b/net/bluetooth/rfcomm/sock.c
+index 1aaccf637479..2e028c47224f 100644
+--- a/net/bluetooth/rfcomm/sock.c
++++ b/net/bluetooth/rfcomm/sock.c
+@@ -197,7 +197,11 @@ static void rfcomm_sock_kill(struct sock *sk)
+ 	if (!sock_flag(sk, SOCK_ZAPPED) || sk->sk_socket)
+ 		return;
+ 
++#if LINUX_VERSION_IS_GEQ(4,13,0)
+ 	BT_DBG("sk %p state %d refcnt %d", sk, sk->sk_state, refcount_read(&sk->sk_refcnt));
++#else
++	BT_DBG("sk %p state %d refcnt %d", sk, sk->sk_state, atomic_read(&sk->sk_refcnt));
++#endif
+ 
+ 	/* Kill poor orphan */
+ 	bt_sock_unlink(&rfcomm_sk_list, sk);
+-- 
+2.24.0
+
