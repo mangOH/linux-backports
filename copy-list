@@ -124,3 +124,7 @@ include/uapi/linux/mpls.h
 net/bluetooth/
 drivers/bluetooth/
 include/net/bluetooth/
+
+# Serdev - required for Bluetooth
+drivers/tty/serdev/
+include/linux/serdev.h
