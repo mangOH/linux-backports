@@ -1,6 +1,8 @@
+diff --git a/net/bluetooth/hidp/core.c b/net/bluetooth/hidp/core.c
+index b21fcc838784..2adbaeea63c3 100644
 --- a/net/bluetooth/hidp/core.c
 +++ b/net/bluetooth/hidp/core.c
-@@ -224,6 +224,7 @@ static void hidp_input_report(struct hid
+@@ -225,6 +225,7 @@ static void hidp_input_report(struct hidp_session *session, struct sk_buff *skb)
  	input_sync(dev);
  }
  
@@ -8,7 +10,7 @@
  static int hidp_get_raw_report(struct hid_device *hid,
  		unsigned char report_number,
  		unsigned char *data, size_t count,
-@@ -396,6 +397,7 @@ static int hidp_raw_request(struct hid_d
+@@ -397,6 +398,7 @@ static int hidp_raw_request(struct hid_device *hid, unsigned char reportnum,
  		return -EIO;
  	}
  }
@@ -16,7 +18,7 @@
  
  static void hidp_idle_timeout(unsigned long arg)
  {
-@@ -739,8 +741,10 @@ static struct hid_ll_driver hidp_hid_dri
+@@ -740,8 +742,10 @@ struct hid_ll_driver hidp_hid_driver = {
  	.stop = hidp_stop,
  	.open  = hidp_open,
  	.close = hidp_close,
@@ -25,5 +27,5 @@
  	.output_report = hidp_output_report,
 +#endif
  };
+ EXPORT_SYMBOL_GPL(hidp_hid_driver);
  
- /* This function sets up the hid device. It does not add it

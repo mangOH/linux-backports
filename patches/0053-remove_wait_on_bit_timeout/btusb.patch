@@ -1,6 +1,8 @@
+diff --git a/drivers/bluetooth/btusb.c b/drivers/bluetooth/btusb.c
+index b8dffe937f4f..0aecc81648d2 100644
 --- a/drivers/bluetooth/btusb.c
 +++ b/drivers/bluetooth/btusb.c
-@@ -1845,8 +1845,12 @@ static void btusb_intel_bootup(struct bt
+@@ -1926,8 +1926,12 @@ static void btusb_intel_bootup(struct btusb_data *data, const void *ptr,
  		return;
  
  	if (test_and_clear_bit(BTUSB_BOOTING, &data->flags)) {
@@ -13,7 +15,7 @@
  	}
  }
  
-@@ -1863,8 +1867,12 @@ static void btusb_intel_secure_send_resu
+@@ -1944,8 +1948,12 @@ static void btusb_intel_secure_send_result(struct btusb_data *data,
  
  	if (test_and_clear_bit(BTUSB_DOWNLOADING, &data->flags) &&
  	    test_bit(BTUSB_FIRMWARE_LOADED, &data->flags)) {
@@ -26,7 +28,7 @@
  	}
  }
  
-@@ -2208,6 +2216,7 @@ static int btusb_setup_intel_new(struct
+@@ -2303,6 +2311,7 @@ static int btusb_setup_intel_new(struct hci_dev *hdev)
  	 * and thus just timeout if that happens and fail the setup
  	 * of this device.
  	 */
@@ -34,7 +36,7 @@
  	err = wait_on_bit_timeout(&data->flags, BTUSB_DOWNLOADING,
  				  TASK_INTERRUPTIBLE,
  				  msecs_to_jiffies(5000));
-@@ -2222,6 +2231,31 @@ static int btusb_setup_intel_new(struct
+@@ -2316,6 +2325,31 @@ static int btusb_setup_intel_new(struct hci_dev *hdev)
  		err = -ETIMEDOUT;
  		goto done;
  	}
@@ -66,7 +68,7 @@
  
  	if (test_bit(BTUSB_FIRMWARE_FAILED, &data->flags)) {
  		BT_ERR("%s: Firmware loading failed", hdev->name);
-@@ -2261,6 +2295,7 @@ done:
+@@ -2355,6 +2389,7 @@ static int btusb_setup_intel_new(struct hci_dev *hdev)
  	 */
  	BT_INFO("%s: Waiting for device to boot", hdev->name);
  
@@ -74,7 +76,7 @@
  	err = wait_on_bit_timeout(&data->flags, BTUSB_BOOTING,
  				  TASK_INTERRUPTIBLE,
  				  msecs_to_jiffies(1000));
-@@ -2274,6 +2309,33 @@ done:
+@@ -2368,6 +2403,33 @@ static int btusb_setup_intel_new(struct hci_dev *hdev)
  		BT_ERR("%s: Device boot timeout", hdev->name);
  		return -ETIMEDOUT;
  	}

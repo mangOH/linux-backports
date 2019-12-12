@@ -1,3 +1,5 @@
+diff --git a/drivers/bluetooth/hci_intel.c b/drivers/bluetooth/hci_intel.c
+index c5886031c6d8..aba8a65ca609 100644
 --- a/drivers/bluetooth/hci_intel.c
 +++ b/drivers/bluetooth/hci_intel.c
 @@ -29,7 +29,9 @@
@@ -10,7 +12,7 @@
  #include <linux/acpi.h>
  #include <linux/interrupt.h>
  #include <linux/pm_runtime.h>
-@@ -379,7 +381,9 @@ static int intel_set_power(struct hci_ua
+@@ -381,7 +383,9 @@ static int intel_set_power(struct hci_uart *hu, bool powered)
  		BT_INFO("hu %p, Switching compatible pm device (%s) to %u",
  			hu, dev_name(&idev->pdev->dev), powered);
  
@@ -20,13 +22,12 @@
  
  		/* Provide to idev a hu reference which is used to run LPM
  		 * transactions (lpm suspend/resume) from PM callbacks.
-@@ -1306,14 +1310,17 @@ static int intel_probe(struct platform_d
- 
- 	idev->pdev = pdev;
+@@ -1326,13 +1330,16 @@ static int intel_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		dev_dbg(&pdev->dev, "Unable to add GPIO mapping table\n");
  
 +#if LINUX_VERSION_IS_GEQ(3,17,0)
- 	idev->reset = devm_gpiod_get_optional(&pdev->dev, "reset",
- 					      GPIOD_OUT_LOW);
+ 	idev->reset = devm_gpiod_get(&pdev->dev, "reset", GPIOD_OUT_LOW);
  	if (IS_ERR(idev->reset)) {
  		dev_err(&pdev->dev, "Unable to retrieve gpio\n");
  		return PTR_ERR(idev->reset);
@@ -38,7 +39,7 @@
  	if (idev->irq < 0) {
  		struct gpio_desc *host_wake;
  
-@@ -1332,12 +1339,15 @@ static int intel_probe(struct platform_d
+@@ -1350,12 +1357,15 @@ static int intel_probe(struct platform_device *pdev)
  			goto no_irq;
  		}
  	}
@@ -54,7 +55,7 @@
  	platform_set_drvdata(pdev, idev);
  
  	/* Place this instance on the device list */
-@@ -1345,8 +1355,10 @@ no_irq:
+@@ -1363,8 +1373,10 @@ static int intel_probe(struct platform_device *pdev)
  	list_add_tail(&idev->list, &intel_device_list);
  	mutex_unlock(&intel_device_list_lock);
  

@@ -1,6 +1,8 @@
+diff --git a/net/bluetooth/rfcomm/tty.c b/net/bluetooth/rfcomm/tty.c
+index 5f3074cb6b4d..4230e2e51dd8 100644
 --- a/net/bluetooth/rfcomm/tty.c
 +++ b/net/bluetooth/rfcomm/tty.c
-@@ -869,7 +869,11 @@ static int rfcomm_tty_ioctl(struct tty_s
+@@ -869,7 +869,11 @@ static int rfcomm_tty_ioctl(struct tty_struct *tty, unsigned int cmd, unsigned l
  
  static void rfcomm_tty_set_termios(struct tty_struct *tty, struct ktermios *old)
  {

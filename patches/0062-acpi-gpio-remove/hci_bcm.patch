@@ -1,7 +1,9 @@
+diff --git a/drivers/bluetooth/hci_bcm.c b/drivers/bluetooth/hci_bcm.c
+index 32527bdf4b50..7e3a3d365b02 100644
 --- a/drivers/bluetooth/hci_bcm.c
 +++ b/drivers/bluetooth/hci_bcm.c
-@@ -29,7 +29,9 @@
- #include <linux/acpi.h>
+@@ -31,7 +31,9 @@
+ #include <linux/property.h>
  #include <linux/platform_device.h>
  #include <linux/clk.h>
 +#if LINUX_VERSION_IS_GEQ(3,13,0)
@@ -10,9 +12,9 @@
  #include <linux/tty.h>
  #include <linux/interrupt.h>
  #include <linux/dmi.h>
-@@ -148,8 +150,10 @@ static int bcm_gpio_set_power(struct bcm
+@@ -170,8 +172,10 @@ static int bcm_gpio_set_power(struct bcm_device *dev, bool powered)
  	if (powered && !IS_ERR(dev->clk) && !dev->clk_enabled)
- 		clk_enable(dev->clk);
+ 		clk_prepare_enable(dev->clk);
  
 +#if LINUX_VERSION_IS_GEQ(3,13,0)
  	gpiod_set_value(dev->shutdown, powered);
@@ -20,8 +22,8 @@
 +#endif
  
  	if (!powered && !IS_ERR(dev->clk) && dev->clk_enabled)
- 		clk_disable(dev->clk);
-@@ -520,7 +524,9 @@ static int bcm_suspend_device(struct dev
+ 		clk_disable_unprepare(dev->clk);
+@@ -571,7 +575,9 @@ static int bcm_suspend_device(struct device *dev)
  
  	/* Suspend the device */
  	if (bdev->device_wakeup) {
@@ -31,7 +33,7 @@
  		bt_dev_dbg(bdev, "suspend, delaying 15 ms");
  		mdelay(15);
  	}
-@@ -535,7 +541,9 @@ static int bcm_resume_device(struct devi
+@@ -586,7 +592,9 @@ static int bcm_resume_device(struct device *dev)
  	bt_dev_dbg(bdev, "");
  
  	if (bdev->device_wakeup) {
@@ -41,32 +43,32 @@
  		bt_dev_dbg(bdev, "resume, delaying 15 ms");
  		mdelay(15);
  	}
-@@ -618,6 +626,7 @@ unlock:
+@@ -669,6 +677,7 @@ static int bcm_resume(struct device *dev)
  }
  #endif
  
 +#if defined(CONFIG_ACPI) && LINUX_VERSION_IS_GEQ(3,19,0)
- static const struct acpi_gpio_params device_wakeup_gpios = { 0, 0, false };
- static const struct acpi_gpio_params shutdown_gpios = { 1, 0, false };
- static const struct acpi_gpio_params host_wakeup_gpios = { 2, 0, false };
-@@ -629,7 +638,6 @@ static const struct acpi_gpio_mapping ac
+ static const struct acpi_gpio_params int_last_device_wakeup_gpios = { 0, 0, false };
+ static const struct acpi_gpio_params int_last_shutdown_gpios = { 1, 0, false };
+ static const struct acpi_gpio_params int_last_host_wakeup_gpios = { 2, 0, false };
+@@ -691,7 +700,6 @@ static const struct acpi_gpio_mapping acpi_bcm_int_first_gpios[] = {
  	{ },
  };
  
 -#ifdef CONFIG_ACPI
- static u8 acpi_active_low = ACPI_ACTIVE_LOW;
- 
  /* IRQ polarity of some chipsets are not defined correctly in ACPI table. */
-@@ -812,7 +820,7 @@ static const struct hci_uart_proto bcm_p
+ static const struct dmi_system_id bcm_active_low_irq_dmi_table[] = {
+ 	{	/* Handle ThinkPad 8 tablets with BCM2E55 chipset ACPI ID */
+@@ -893,7 +901,7 @@ static const struct hci_uart_proto bcm_proto = {
  	.dequeue	= bcm_dequeue,
  };
  
 -#ifdef CONFIG_ACPI
 +#if defined(CONFIG_ACPI) && LINUX_VERSION_IS_GEQ(3,19,0)
  static const struct acpi_device_id bcm_acpi_match[] = {
- 	{ "BCM2E1A", 0 },
- 	{ "BCM2E39", 0 },
-@@ -843,7 +851,9 @@ static struct platform_driver bcm_driver
+ 	{ "BCM2E1A", (kernel_ulong_t)&acpi_bcm_int_last_gpios },
+ 	{ "BCM2E39", (kernel_ulong_t)&acpi_bcm_int_last_gpios },
+@@ -927,7 +935,9 @@ static struct platform_driver bcm_driver = {
  	.remove = bcm_remove,
  	.driver = {
  		.name = "hci_bcm",

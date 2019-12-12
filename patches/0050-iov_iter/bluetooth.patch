@@ -1,3 +1,5 @@
+diff --git a/include/net/bluetooth/l2cap.h b/include/net/bluetooth/l2cap.h
+index 0697fd413087..db1a30d99e9d 100644
 --- a/include/net/bluetooth/l2cap.h
 +++ b/include/net/bluetooth/l2cap.h
 @@ -619,6 +619,12 @@ struct l2cap_ops {
@@ -13,7 +15,7 @@
  };
  
  struct l2cap_conn {
-@@ -912,6 +918,33 @@ static inline long l2cap_chan_no_get_snd
+@@ -912,6 +918,33 @@ static inline long l2cap_chan_no_get_sndtimeo(struct l2cap_chan *chan)
  	return 0;
  }
  
@@ -47,9 +49,11 @@
  extern bool disable_ertm;
  
  int l2cap_init_sockets(void);
+diff --git a/net/bluetooth/6lowpan.c b/net/bluetooth/6lowpan.c
+index 4c5bcc3ec12d..b7ec8420b35d 100644
 --- a/net/bluetooth/6lowpan.c
 +++ b/net/bluetooth/6lowpan.c
-@@ -515,11 +515,18 @@ static int send_pkt(struct l2cap_chan *c
+@@ -464,11 +464,18 @@ static int send_pkt(struct l2cap_chan *chan, struct sk_buff *skb,
  	 */
  	chan->data = skb;
  
@@ -68,7 +72,7 @@
  
  	err = l2cap_chan_send(chan, &msg, skb->len);
  	if (err > 0) {
-@@ -1017,6 +1024,9 @@ static const struct l2cap_ops bt_6lowpan
+@@ -902,6 +909,9 @@ static const struct l2cap_ops bt_6lowpan_chan_ops = {
  	.suspend		= chan_suspend_cb,
  	.get_sndtimeo		= chan_get_sndtimeo_cb,
  	.alloc_skb		= chan_alloc_skb_cb,
@@ -78,9 +82,11 @@
  
  	.teardown		= l2cap_chan_no_teardown,
  	.defer			= l2cap_chan_no_defer,
+diff --git a/net/bluetooth/a2mp.c b/net/bluetooth/a2mp.c
+index aad994edd3bb..ab3bb878fde8 100644
 --- a/net/bluetooth/a2mp.c
 +++ b/net/bluetooth/a2mp.c
-@@ -63,7 +63,12 @@ static void a2mp_send(struct amp_mgr *mg
+@@ -63,7 +63,12 @@ static void a2mp_send(struct amp_mgr *mgr, u8 code, u8 ident, u16 len, void *dat
  
  	memset(&msg, 0, sizeof(msg));
  
@@ -93,7 +99,7 @@
  
  	l2cap_chan_send(chan, &msg, total_len);
  
-@@ -753,6 +758,9 @@ static const struct l2cap_ops a2mp_chan_
+@@ -753,6 +758,9 @@ static const struct l2cap_ops a2mp_chan_ops = {
  	.resume = l2cap_chan_no_resume,
  	.set_shutdown = l2cap_chan_no_set_shutdown,
  	.get_sndtimeo = l2cap_chan_no_get_sndtimeo,
@@ -103,28 +109,33 @@
  };
  
  static struct l2cap_chan *a2mp_chan_open(struct l2cap_conn *conn, bool locked)
+diff --git a/net/bluetooth/l2cap_core.c b/net/bluetooth/l2cap_core.c
+index 9b7907ebfa01..764e277c58ba 100644
 --- a/net/bluetooth/l2cap_core.c
 +++ b/net/bluetooth/l2cap_core.c
-@@ -2126,7 +2126,12 @@ static inline int l2cap_skbuff_fromiovec
+@@ -2127,9 +2127,15 @@ static inline int l2cap_skbuff_fromiovec(struct l2cap_chan *chan,
  	struct sk_buff **frag;
  	int sent = 0;
  
 +#if LINUX_VERSION_IS_GEQ(3,19,0)
- 	if (copy_from_iter(skb_put(skb, count), count, &msg->msg_iter) != count)
+ 	if (!copy_from_iter_full(skb_put(skb, count), count, &msg->msg_iter))
 +#else
 +	if (chan->ops->memcpy_fromiovec(chan, skb_put(skb, count),
 +					msg->msg_iov, count))
 +#endif
  		return -EFAULT;
  
++
  	sent += count;
-@@ -2146,8 +2151,13 @@ static inline int l2cap_skbuff_fromiovec
+ 	len  -= count;
+ 
+@@ -2147,8 +2153,13 @@ static inline int l2cap_skbuff_fromiovec(struct l2cap_chan *chan,
  
  		*frag = tmp;
  
 +#if LINUX_VERSION_IS_GEQ(3,19,0)
- 		if (copy_from_iter(skb_put(*frag, count), count,
- 				   &msg->msg_iter) != count)
+ 		if (!copy_from_iter_full(skb_put(*frag, count), count,
+ 				   &msg->msg_iter))
 +#else
 +		if (chan->ops->memcpy_fromiovec(chan, skb_put(*frag, count),
 +						msg->msg_iov, count))
@@ -132,9 +143,11 @@
  			return -EFAULT;
  
  		sent += count;
+diff --git a/net/bluetooth/l2cap_sock.c b/net/bluetooth/l2cap_sock.c
+index 67a8642f57ea..38e8ac57fa36 100644
 --- a/net/bluetooth/l2cap_sock.c
 +++ b/net/bluetooth/l2cap_sock.c
-@@ -1383,6 +1383,15 @@ static struct sk_buff *l2cap_sock_alloc_
+@@ -1395,6 +1395,15 @@ static struct sk_buff *l2cap_sock_alloc_skb_cb(struct l2cap_chan *chan,
  	return skb;
  }
  
@@ -150,7 +163,7 @@
  static void l2cap_sock_ready_cb(struct l2cap_chan *chan)
  {
  	struct sock *sk = chan->data;
-@@ -1467,6 +1476,9 @@ static const struct l2cap_ops l2cap_chan
+@@ -1479,6 +1488,9 @@ static const struct l2cap_ops l2cap_chan_ops = {
  	.set_shutdown		= l2cap_sock_set_shutdown_cb,
  	.get_sndtimeo		= l2cap_sock_get_sndtimeo_cb,
  	.alloc_skb		= l2cap_sock_alloc_skb_cb,
@@ -160,9 +173,11 @@
  };
  
  static void l2cap_sock_destruct(struct sock *sk)
+diff --git a/net/bluetooth/smp.c b/net/bluetooth/smp.c
+index a27704ff13a9..7b9fb9028858 100644
 --- a/net/bluetooth/smp.c
 +++ b/net/bluetooth/smp.c
-@@ -612,7 +612,12 @@ static void smp_send_cmd(struct l2cap_co
+@@ -622,7 +622,12 @@ static void smp_send_cmd(struct l2cap_conn *conn, u8 code, u16 len, void *data)
  
  	memset(&msg, 0, sizeof(msg));
  
@@ -175,7 +190,7 @@
  
  	l2cap_chan_send(chan, &msg, 1 + len);
  
-@@ -3066,6 +3071,9 @@ static const struct l2cap_ops smp_chan_o
+@@ -3119,6 +3124,9 @@ static const struct l2cap_ops smp_chan_ops = {
  	.suspend		= l2cap_chan_no_suspend,
  	.set_shutdown		= l2cap_chan_no_set_shutdown,
  	.get_sndtimeo		= l2cap_chan_no_get_sndtimeo,
@@ -185,7 +200,7 @@
  };
  
  static inline struct l2cap_chan *smp_new_conn_cb(struct l2cap_chan *pchan)
-@@ -3114,6 +3122,9 @@ static const struct l2cap_ops smp_root_c
+@@ -3167,6 +3175,9 @@ static const struct l2cap_ops smp_root_chan_ops = {
  	.resume			= l2cap_chan_no_resume,
  	.set_shutdown		= l2cap_chan_no_set_shutdown,
  	.get_sndtimeo		= l2cap_chan_no_get_sndtimeo,

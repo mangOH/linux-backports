@@ -1,14 +1,16 @@
+diff --git a/drivers/bluetooth/hci_vhci.c b/drivers/bluetooth/hci_vhci.c
+index e6f6dbc04131..a1cffad340af 100644
 --- a/drivers/bluetooth/hci_vhci.c
 +++ b/drivers/bluetooth/hci_vhci.c
-@@ -151,6 +151,7 @@ static int vhci_create_device(struct vhc
- 	return 0;
+@@ -166,6 +166,7 @@ static int vhci_create_device(struct vhci_data *data, __u8 opcode)
+ 	return err;
  }
  
 +#if LINUX_VERSION_IS_GEQ(3,18,0)
  static inline ssize_t vhci_get_user(struct vhci_data *data,
  				    struct iov_iter *from)
  {
-@@ -158,6 +159,17 @@ static inline ssize_t vhci_get_user(stru
+@@ -173,6 +174,17 @@ static inline ssize_t vhci_get_user(struct vhci_data *data,
  	struct sk_buff *skb;
  	__u8 pkt_type, opcode;
  	int ret;
@@ -26,12 +28,12 @@
  
  	if (len < 2 || len > HCI_MAX_FRAME_SIZE)
  		return -EINVAL;
-@@ -166,10 +178,20 @@ static inline ssize_t vhci_get_user(stru
+@@ -181,10 +193,20 @@ static inline ssize_t vhci_get_user(struct vhci_data *data,
  	if (!skb)
  		return -ENOMEM;
  
 +#if LINUX_VERSION_IS_GEQ(3,18,0)
- 	if (copy_from_iter(skb_put(skb, len), len, from) != len) {
+ 	if (!copy_from_iter_full(skb_put(skb, len), len, from)) {
  		kfree_skb(skb);
  		return -EFAULT;
  	}
@@ -47,7 +49,7 @@
  
  	pkt_type = *((__u8 *) skb->data);
  	skb_pull(skb, 1);
-@@ -281,12 +303,21 @@ static ssize_t vhci_read(struct file *fi
+@@ -291,12 +313,21 @@ static ssize_t vhci_read(struct file *file,
  	return ret;
  }
  
@@ -69,7 +71,7 @@
  }
  
  static unsigned int vhci_poll(struct file *file, poll_table *wait)
-@@ -351,7 +382,11 @@ static int vhci_release(struct inode *in
+@@ -365,7 +396,11 @@ static int vhci_release(struct inode *inode, struct file *file)
  static const struct file_operations vhci_fops = {
  	.owner		= THIS_MODULE,
  	.read		= vhci_read,
