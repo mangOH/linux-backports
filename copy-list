@@ -119,3 +119,8 @@ include/linux/platform_data/nxp-nci.h
 # this right now, see 960d97f95
 include/linux/mpls.h
 include/uapi/linux/mpls.h
+
+# Bluetooth
+net/bluetooth/
+drivers/bluetooth/
+include/net/bluetooth/
