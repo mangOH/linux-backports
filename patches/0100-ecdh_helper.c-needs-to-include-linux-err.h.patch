@@ -1,0 +1,24 @@
+From 94dc09bbb1346dd41b895d90ee43b5b0b942882d Mon Sep 17 00:00:00 2001
+From: David Frey <dfrey@sierrawireless.com>
+Date: Thu, 12 Dec 2019 15:37:26 -0800
+Subject: [PATCH] ecdh_helper.c needs to #include <linux/err.h>
+
+---
+ net/bluetooth/ecdh_helper.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/net/bluetooth/ecdh_helper.c b/net/bluetooth/ecdh_helper.c
+index c7b1a9aee579..59c1d7a13ed8 100644
+--- a/net/bluetooth/ecdh_helper.c
++++ b/net/bluetooth/ecdh_helper.c
+@@ -25,6 +25,7 @@
+ #include <linux/scatterlist.h>
+ #include <crypto/kpp.h>
+ #include <crypto/ecdh.h>
++#include <linux/err.h>
+ 
+ struct ecdh_completion {
+ 	struct completion completion;
+-- 
+2.24.0
+

@@ -1,0 +1,59 @@
+From ab6545109637a66b9e9d09e8f7bde6517b5ed740 Mon Sep 17 00:00:00 2001
+From: David Frey <dfrey@sierrawireless.com>
+Date: Thu, 12 Dec 2019 15:59:49 -0800
+Subject: [PATCH] cast the return value type of skb_ functions from unsigned
+ char* void*
+
+In kernel versions >= 4.13 the return type has been changed to void*
+---
+ net/bluetooth/a2mp.c        | 4 ++--
+ net/bluetooth/rfcomm/core.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/bluetooth/a2mp.c b/net/bluetooth/a2mp.c
+index ab3bb878fde8..5aea1c02cd89 100644
+--- a/net/bluetooth/a2mp.c
++++ b/net/bluetooth/a2mp.c
+@@ -244,7 +244,7 @@ static int a2mp_discover_rsp(struct amp_mgr *mgr, struct sk_buff *skb,
+ 		}
+ 
+ 		len -= sizeof(*cl);
+-		cl = skb_pull(skb, sizeof(*cl));
++		cl = (void *)skb_pull(skb, sizeof(*cl));
+ 	}
+ 
+ 	/* Fall back to L2CAP init sequence */
+@@ -284,7 +284,7 @@ static int a2mp_change_notify(struct amp_mgr *mgr, struct sk_buff *skb,
+ 	while (skb->len >= sizeof(*cl)) {
+ 		BT_DBG("Controller id %d type %d status %d", cl->id, cl->type,
+ 		       cl->status);
+-		cl = skb_pull(skb, sizeof(*cl));
++		cl = (void *)skb_pull(skb, sizeof(*cl));
+ 	}
+ 
+ 	/* TODO send A2MP_CHANGE_RSP */
+diff --git a/net/bluetooth/rfcomm/core.c b/net/bluetooth/rfcomm/core.c
+index 4a0b41d75c84..ffb3c2a10390 100644
+--- a/net/bluetooth/rfcomm/core.c
++++ b/net/bluetooth/rfcomm/core.c
+@@ -863,7 +863,7 @@ static int rfcomm_queue_disc(struct rfcomm_dlc *d)
+ 	if (!skb)
+ 		return -ENOMEM;
+ 
+-	cmd = __skb_put(skb, sizeof(*cmd));
++	cmd = (void *)__skb_put(skb, sizeof(*cmd));
+ 	cmd->addr = d->addr;
+ 	cmd->ctrl = __ctrl(RFCOMM_DISC, 1);
+ 	cmd->len  = __len8(0);
+@@ -1158,7 +1158,7 @@ static void rfcomm_make_uih(struct sk_buff *skb, u8 addr)
+ 	hdr->addr = addr;
+ 	hdr->ctrl = __ctrl(RFCOMM_UIH, 0);
+ 
+-	crc = skb_put(skb, 1);
++	crc = (void *)skb_put(skb, 1);
+ 	*crc = __fcs((void *) hdr);
+ }
+ 
+-- 
+2.24.0
+
