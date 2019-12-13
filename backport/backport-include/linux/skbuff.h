@@ -357,6 +357,15 @@ static inline void skb_put_u8(struct sk_buff *skb, u8 val)
 {
 	*(u8 *)skb_put(skb, 1) = val;
 }
+
+static inline void *__skb_put_data(struct sk_buff *skb, const void *data,
+                                   unsigned int len)
+{
+	void *tmp = __skb_put(skb, len);
+
+	memcpy(tmp, data, len);
+	return tmp;
+}
 #endif
 
 #endif /* __BACKPORT_SKBUFF_H */
